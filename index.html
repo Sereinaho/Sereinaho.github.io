@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>单词摇号</title>
+  <meta charset="UTF-8"/>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 16px;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* 页面头部 */
+    header {
+      background-color: #f2f2f2;
+      padding: 10px;
+    }
+
+    header h1 {
+      color: #333;
+      font-size: 30px;
+      margin: 0;
+      text-align: center;
+    }
+
+    .input-group {
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+    }
+
+    label {
+      display: inline-block;
+      margin-right: 5px;
+      flex-shrink: 0;
+    }
+
+    input[type="number"] {
+      font-size: 16px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      flex-grow: 1;
+    }
+
+    button {
+      background-color: #4caf50;
+      border: none;
+      border-radius: 3px;
+      color: #fff;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 10px;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #3e8e41;
+    }
+
+    /* 页面内容 */
+    main {
+      margin: 20px 30px;
+    }
+
+    .output-group {
+      background-color: #f2f2f2;
+      border: 1px solid #ccc;
+      margin-bottom: 10px;
+      padding: 10px;
+    }
+
+    .output-group h2 {
+      color: #444;
+      font-size: 18px;
+      margin: 0;
+    }
+
+    #output,
+    #meanings {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    #output p,
+    #meanings p {
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      margin-right: 10px;
+      margin-bottom: 10px;
+      padding: 10px;
+      min-width: 150px;
+      text-align: center;
+    }
+
+    /* 页面底部 */
+    footer {
+      background-color: #ddd;
+      color: #777;
+      font-size: 14px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    /* 摇号按钮 */
+    button#shake-btn {
+      font-size: 24px;
+      padding: 15px;
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <h1>单词摇号</h1>
+  <div class="input-group">
+    <label for="number-input">摇单词数量:</label>
+    <input id="number-input" type="number" value="1"/>
+    <button id="shake-btn">摇号</button>
+  </div>
+  <div class="input-group">
+    <label for="file-input">上传单词文件：</label>
+    <input accept=".txt" id="file-input" onchange="loadWordsFile()" type="file"/>
+  </div>
+</header>
+
+<main>
+  <div class="output-group">
+    <h2>摇出单词</h2>
+    <div id="output"></div>
+  </div>
+
+  <div class="output-group">
+    <!-- <h2>中文含义</h2>  -->
+    <div id="meanings"></div>
+  </div>
+
+  <p>使用方法:上传单词文件即可，单词文件内容格式为[单词,中文]每一行一个单词和中文</p>
+</main>
+
+<footer>
+
+  <p>作者: Serein © 2023 摇号助手</p>
+</footer>
+<script>
+  // 存储单词列表
+  let words = [];
+
+  // 获取摇号按钮并绑定 click 事件
+  const shakeBtn = document.getElementById("shake-btn");
+  shakeBtn.addEventListener("click", shake);
+
+  // 摇号方法
+  function shake() {
+    const num = parseInt(document.getElementById("number-input").value);
+
+    // 如果摇号数量非法，弹出提示框，函数结束执行
+    if (isNaN(num) || num < 1) {
+      alert("请输入合法数字大于0");
+      return;
+    }
+
+    // 如果摇号数量大于文件中单词的数量，弹出提示框，函数结束执行
+    if (num > words.length) {
+      alert("摇号数量超过单词文件中的数量");
+      return;
+    }
+
+    // 获取输出结果的 div 元素
+    const outputDiv = document.getElementById("output");
+    const meaningsDiv = document.getElementById("meanings");
+    // 清空摇出单词列表和中文含义列表
+    outputDiv.innerHTML = "";
+    meaningsDiv.innerHTML = "";
+    // 存储已经选中的单词的下标
+    const selectedWords = new Set();
+    while (selectedWords.size < num) {
+      const index = Math.floor(Math.random() * words.length);
+      selectedWords.add(index);
+    }
+    // 在输出结果的 div 元素中添加所有摇出的单词
+    selectedWords.forEach((index) => {
+      const word = words[index].split(",")[0].trim();
+      const meaning = words[index].split(",")[1].trim();
+      const p = document.createElement("p");
+      p.innerText = word;
+      outputDiv.appendChild(p);
+      // 为每个单词添加 click 事件，用于展示中文含义
+      p.addEventListener("click", () => {
+        //showMeaning(word, meaning);
+        p.innerText = word + ": " + meaning;
+      });
+    });
+  }
+
+  // 展示中文含义的方法
+  function showMeaning(word, meaning) {
+    const meaningsDiv = document.getElementById("meanings");
+    const p = document.createElement("p");
+    p.innerText = word + ": " + meaning;
+    meaningsDiv.appendChild(p);
+  }
+
+  // 解析上传的单词文件的方法
+ /* function loadWordsFile() {
+    const fileInput = document.getElementById("file-input");
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    reader.readAsText(file);
+    reader.onload = () => {
+      words = reader.result.trim().split("\n");
+      // 将摇出单词列表和中文含义列表清空，将摇号数量输入框的值重置为1
+      document.getElementById("output").innerHTML = "";
+      document.getElementById("meanings").innerHTML = "";
+      document.getElementById("number-input").value = 1;
+    };
+  }*/
+
+  function loadWordsFile() {
+    const fileInput = document.getElementById("file-input");
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    reader.readAsText(file, "utf-8"); // 以 UTF-8 的编码格式读取文件内容
+    reader.onload = () => {
+      words = reader.result.trim().split("\n");
+      // 将摇出单词列表和中文含义列表清空，将摇号数量输入框的值重置为1
+      document.getElementById("output").innerHTML = "";
+      document.getElementById("meanings").innerHTML = "";
+      document.getElementById("number-input").value = 1;
+    };
+  }
+</script>
+</body>
+</html>
